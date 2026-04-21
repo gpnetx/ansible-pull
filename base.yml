@@ -14,7 +14,6 @@
       - uptimed
       - htop
       - sudo
-      - tailscale
 
   roles:
     - common
