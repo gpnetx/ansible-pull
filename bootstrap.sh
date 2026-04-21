@@ -5,26 +5,28 @@ REPO_URL="https://github.com/gpnetx/ansible-pull.git"
 PLAYBOOK="base.yml"
 WORKDIR="/var/lib/ansible-pull"
 
+# Use sudo if not already running as root
 if [[ "${EUID}" -ne 0 ]]; then
-  SUDO="sudo"
+    SUDO="sudo"
 else
-  SUDO=""
+    SUDO=""
 fi
 
-echo "==> Updating apt cache..."
+echo "==> Updating apt package cache..."
 $SUDO apt-get update
 
-echo "==> Installing git and ansible..."
+echo "==> Installing required packages (git + ansible)..."
 $SUDO apt-get install -y git ansible
 
-echo "==> Creating working directory..."
+echo "==> Creating ansible-pull working directory..."
 $SUDO mkdir -p "$WORKDIR"
-$SUDO chown "$(id -u)":"$(id -g)" "$WORKDIR"
 
-echo "==> Running ansible-pull from $REPO_URL ..."
-ansible-pull \
-  -U "$REPO_URL" \
-  -d "$WORKDIR" \
-  -i localhost, \
-  -c local \
-  "$PLAYBOOK"
+echo "==> Running ansible-pull from GitHub..."
+$SUDO ansible-pull \
+    -U "$REPO_URL" \
+    -d "$WORKDIR" \
+    -i localhost, \
+    -c local \
+    "$PLAYBOOK"
+
+echo "==> Bootstrap complete."
