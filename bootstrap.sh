@@ -27,6 +27,7 @@ $SUDO ansible-pull \
     -d "$WORKDIR" \
     -i localhost, \
     -c local \
+    -l localhost \
     "$PLAYBOOK"
 
 echo "==> Bootstrap complete."
