@@ -1,0 +1,71 @@
+---
+- name: Install common packages
+  ansible.builtin.apt:
+    name: "{{ common_packages }}"
+    state: present
+    update_cache: true
+
+- name: Set timezone to America/New_York
+  ansible.builtin.file:
+    src: /usr/share/zoneinfo/America/New_York
+    dest: /etc/localtime
+    state: link
+    force: true
+
+- name: Write timezone to /etc/timezone
+  ansible.builtin.copy:
+    content: "America/New_York\n"
+    dest: /etc/timezone
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Ensure gregg .ssh directory exists
+  ansible.builtin.file:
+    path: "/home/{{ gregg_user }}/.ssh"
+    state: directory
+    owner: "{{ gregg_user }}"
+    group: "{{ gregg_user }}"
+    mode: "0700"
+
+- name: Install Gregg authorized_keys
+  ansible.builtin.copy:
+    src: gregg_authorized_keys
+    dest: "/home/{{ gregg_user }}/.ssh/authorized_keys"
+    owner: "{{ gregg_user }}"
+    group: "{{ gregg_user }}"
+    mode: "0600"
+
+- name: Create ansible user
+  ansible.builtin.user:
+    name: "{{ ansible_user_name }}"
+    shell: /bin/bash
+    create_home: true
+    groups: sudo
+    append: true
+    state: present
+
+- name: Ensure ansible .ssh directory exists
+  ansible.builtin.file:
+    path: "/home/{{ ansible_user_name }}/.ssh"
+    state: directory
+    owner: "{{ ansible_user_name }}"
+    group: "{{ ansible_user_name }}"
+    mode: "0700"
+
+- name: Install ansible authorized_keys
+  ansible.builtin.copy:
+    src: ansible_authorized_keys
+    dest: "/home/{{ ansible_user_name }}/.ssh/authorized_keys"
+    owner: "{{ ansible_user_name }}"
+    group: "{{ ansible_user_name }}"
+    mode: "0600"
+
+- name: Allow passwordless sudo for ansible user
+  ansible.builtin.template:
+    src: ansible-sudoers.j2
+    dest: /etc/sudoers.d/ansible
+    owner: root
+    group: root
+    mode: "0440"
+    validate: "/usr/sbin/visudo -cf %s"
