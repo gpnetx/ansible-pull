@@ -1,0 +1,23 @@
+---
+- name: Gregg Docker host configuration
+  hosts: localhost
+  connection: local
+  become: true
+
+  vars:
+    gregg_user: gregg
+    ansible_user_name: ansible
+
+    common_packages:
+      - curl
+      - wget
+      - rsync
+      - uptimed
+      - htop
+      - sudo
+
+    docker_user: gregg
+
+  roles:
+    - common
+    - docker
