@@ -36,11 +36,12 @@
     group: "{{ gregg_user }}"
     mode: "0600"
 
-- name: Create ansible user
+- name: Create ansible service user
   ansible.builtin.user:
     name: "{{ ansible_user_name }}"
     shell: /bin/bash
     create_home: true
+    system: true
     groups: sudo
     append: true
     state: present
