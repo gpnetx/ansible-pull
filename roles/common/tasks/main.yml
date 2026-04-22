@@ -20,6 +20,15 @@
     group: root
     mode: "0644"
 
+- name: Create gregg user
+  ansible.builtin.user:
+    name: "{{ gregg_user }}"
+    shell: /bin/bash
+    create_home: true
+    groups: sudo
+    append: true
+    state: present
+
 - name: Ensure gregg .ssh directory exists
   ansible.builtin.file:
     path: "/home/{{ gregg_user }}/.ssh"
