@@ -8,16 +8,7 @@
     gregg_user: gregg
     ansible_user_name: ansible
 
-    common_packages:
-      - curl
-      - wget
-      - rsync
-      - uptimed
-      - htop
-      - sudo
-
     docker_user: gregg
 
   roles:
-    - common
     - docker
