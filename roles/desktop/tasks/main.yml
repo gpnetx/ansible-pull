@@ -9,7 +9,8 @@
   ansible.builtin.command: >
     flatpak remote-add --if-not-exists flathub
     https://flathub.org/repo/flathub.flatpakrepo
-  changed_when: false
+  register: flathub_result
+  changed_when: flathub_result.rc == 0 and "already exists" not in flathub_result.stderr
 
 - name: Ensure apt keyrings directory exists
   ansible.builtin.file:

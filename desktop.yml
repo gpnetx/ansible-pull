@@ -15,6 +15,7 @@
       - vlc
       - nmap
       - gnome-software-plugin-flatpak
+      - gnome-tweaks
 
   roles:
     - desktop
