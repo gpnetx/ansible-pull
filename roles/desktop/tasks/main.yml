@@ -1,0 +1,152 @@
+---
+- name: Install desktop baseline packages
+  ansible.builtin.apt:
+    name: "{{ desktop_packages }}"
+    state: present
+    update_cache: true
+
+- name: Ensure apt keyrings directory exists
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+# Firefox
+- name: Download Mozilla repo signing key
+  ansible.builtin.get_url:
+    url: https://packages.mozilla.org/apt/repo-signing-key.gpg
+    dest: /etc/apt/keyrings/packages.mozilla.org.asc
+    mode: "0644"
+
+- name: Add Mozilla repo for Firefox
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list.d/mozilla.sources
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      Types: deb
+      URIs: https://packages.mozilla.org/apt
+      Suites: mozilla
+      Components: main
+      Signed-By: /etc/apt/keyrings/packages.mozilla.org.asc
+
+- name: Pin Mozilla packages
+  ansible.builtin.copy:
+    dest: /etc/apt/preferences.d/mozilla
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      Package: *
+      Pin: origin packages.mozilla.org
+      Pin-Priority: 1000
+
+- name: Remove Firefox ESR
+  ansible.builtin.apt:
+    name: firefox-esr
+    state: absent
+    purge: true
+
+- name: Install Firefox
+  ansible.builtin.apt:
+    name: firefox
+    state: present
+    update_cache: true
+
+# Brave
+- name: Download Brave archive keyring
+  ansible.builtin.get_url:
+    url: https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
+    dest: /usr/share/keyrings/brave-browser-archive-keyring.gpg
+    mode: "0644"
+
+- name: Add Brave source file
+  ansible.builtin.get_url:
+    url: https://brave-browser-apt-release.s3.brave.com/brave-browser.sources
+    dest: /etc/apt/sources.list.d/brave-browser-release.sources
+    mode: "0644"
+
+- name: Install Brave browser
+  ansible.builtin.apt:
+    name: brave-browser
+    state: present
+    update_cache: true
+
+# Microsoft Edge
+- name: Download Microsoft repo package
+  ansible.builtin.get_url:
+    url: https://packages.microsoft.com/config/debian/13/packages-microsoft-prod.deb
+    dest: /tmp/packages-microsoft-prod.deb
+    mode: "0644"
+
+- name: Install Microsoft repo package
+  ansible.builtin.apt:
+    deb: /tmp/packages-microsoft-prod.deb
+
+- name: Install Microsoft Edge
+  ansible.builtin.apt:
+    name: microsoft-edge-stable
+    state: present
+    update_cache: true
+
+- name: Remove temporary Microsoft repo package
+  ansible.builtin.file:
+    path: /tmp/packages-microsoft-prod.deb
+    state: absent
+
+# Syncthing
+- name: Enable and start Syncthing system service for gregg
+  ansible.builtin.systemd:
+    name: "syncthing@{{ gregg_user }}"
+    enabled: true
+    state: started
+
+# WireGuard
+- name: Install WireGuard packages
+  ansible.builtin.apt:
+    name:
+      - wireguard
+      - wireguard-tools
+    state: present
+    update_cache: true
+
+- name: Ensure /etc/wireguard exists
+  ansible.builtin.file:
+    path: /etc/wireguard
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Check if WireGuard private key exists
+  ansible.builtin.stat:
+    path: /etc/wireguard/privatekey
+  register: wg_privatekey
+
+- name: Generate WireGuard private key
+  ansible.builtin.shell: |
+    umask 077
+    wg genkey > /etc/wireguard/privatekey
+  when: not wg_privatekey.stat.exists
+
+- name: Generate WireGuard public key
+  ansible.builtin.shell: |
+    wg pubkey < /etc/wireguard/privatekey > /etc/wireguard/publickey
+  when: not wg_privatekey.stat.exists
+
+- name: Set permissions on WireGuard private key
+  ansible.builtin.file:
+    path: /etc/wireguard/privatekey
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Set permissions on WireGuard public key
+  ansible.builtin.file:
+    path: /etc/wireguard/publickey
+    owner: root
+    group: root
+    mode: "0644"
