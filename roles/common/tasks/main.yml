@@ -29,12 +29,11 @@
     mode: "0700"
 
 - name: Install Gregg authorized_keys
-  ansible.builtin.copy:
-    src: gregg_authorized_keys
-    dest: "/home/{{ gregg_user }}/.ssh/authorized_keys"
-    owner: "{{ gregg_user }}"
-    group: "{{ gregg_user }}"
-    mode: "0600"
+  ansible.posix.authorized_key:
+    user: "{{ gregg_user }}"
+    state: present
+    key: "{{ lookup('file', 'files/gregg_authorized_keys') }}"
+    exclusive: false
 
 - name: Create ansible service user
   ansible.builtin.user:
